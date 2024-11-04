@@ -11,8 +11,8 @@ services:
       - ./:/app
       - /app/node_modules
     networks:
-      - monitoring
+      - selenium-framework_monitoring
 
 networks:
-  monitoring:
+  selenium-framework_monitoring:
     external: true
