@@ -14,7 +14,6 @@ const BotDetails: React.FC = () => {
 	const botId = params.botId
 	const [bot, setBot] = useState<Bot | null>(null)
 	const [runs, setRuns] = useState<Run[]>([])
-	const [isRunning, setIsRunning] = useState<boolean>(false)
 
 	useEffect(() => {
 		if (!botId) return
@@ -23,9 +22,6 @@ const BotDetails: React.FC = () => {
 			try {
 				const botResponse = await apiClient.get<Bot>(`/bots/${botId}`)
 				setBot(botResponse.data)
-
-				const statusResponse = await apiClient.get(`/bots/${botId}/status`)
-				setIsRunning(statusResponse.data.status === 'running')
 
 				const runsResponse = await apiClient.get<Run[]>(`/bots/${botId}/runs`)
 				setRuns(runsResponse.data)
@@ -39,16 +35,6 @@ const BotDetails: React.FC = () => {
 		// Subscribe to bot status updates
 		socket.emit('join', { bot_id: botId })
 
-		socket.on('bot_status', (data) => {
-			if (data.bot_id === botId) {
-				setIsRunning(data.status === 'running')
-				// Update bot status
-				setBot((prevBot) =>
-					prevBot ? { ...prevBot, status: data.status } : prevBot
-				)
-			}
-		})
-
 		// Listen for bot deletion
 		socket.on('bot_deleted', (data) => {
 			if (data.bot_id === botId) {
@@ -57,30 +43,47 @@ const BotDetails: React.FC = () => {
 			}
 		})
 
+		socket.on('run_created', (data) => {
+			if (data.bot_id === botId) {
+				setRuns((prevRuns) => [...prevRuns, data])
+			}
+		})
+
+		socket.on('run_updated', (data) => {
+			const updatedRunIndex = runs.findIndex((run) => run.id === data.id)
+			if (updatedRunIndex > -1) {
+				setRuns((prevRuns) => {
+					const newRuns = [...prevRuns]
+					newRuns[updatedRunIndex] = data
+					return newRuns
+				})
+			}
+		})
+
 		return () => {
 			socket.emit('leave', { bot_id: botId })
-			socket.off('bot_status')
 			socket.off('bot_deleted')
+			socket.off('run_created')
+			socket.off('run_updated')
 		}
 	}, [botId])
 
 	const handleRunBot = async () => {
 		try {
-			await apiClient.post(`/bots/${botId}/run`)
-			setIsRunning(true)
+			await apiClient.post(`/bots/${botId}/runs`)
 		} catch (error) {
 			console.error('Error running bot:', error)
 		}
 	}
 
-	const handleStopBot = async () => {
-		try {
-			await apiClient.post(`/bots/${botId}/stop`)
-			setIsRunning(false)
-		} catch (error) {
-			console.error('Error stopping bot:', error)
-		}
-	}
+	// const handleStopBot = async () => {
+	// 	try {
+	// 		await apiClient.post(`/bots/${botId}/stop`)
+	// 		setIsRunning(false)
+	// 	} catch (error) {
+	// 		console.error('Error stopping bot:', error)
+	// 	}
+	// }
 
 	const handleDeleteBot = async () => {
 		if (
@@ -104,17 +107,15 @@ const BotDetails: React.FC = () => {
 	return (
 		<div>
 			<h1>Bot Details: {bot.name}</h1>
-			<p>Status: {bot.status}</p>
 			<p>Script: {bot.script}</p>
 			<p>Schedule: {bot.schedule || 'Not scheduled'}</p>
 
-			<button onClick={handleRunBot} disabled={isRunning}>
-				{!isRunning ? (
-					<button onClick={handleRunBot}>Run Bot</button>
-				) : (
-					<button onClick={handleStopBot}>Stop Bot</button>
-				)}
-			</button>
+			{/* {!isRunning ? (
+				<button onClick={handleRunBot}>Run Bot</button>
+			) : (
+				<button onClick={handleStopBot}>Stop Bot</button>
+			)} */}
+			<button onClick={handleRunBot}>Run Bot</button>
 
 			<button
 				onClick={handleDeleteBot}
@@ -126,9 +127,9 @@ const BotDetails: React.FC = () => {
 			<h2>Runs</h2>
 			<ul>
 				{runs.map((run) => (
-					<li key={run.run_id}>
-						<Link href={`/bots/${botId}/runs/${run.run_id}`}>
-							Run ID: {run.run_id} - Status: {run.status}
+					<li key={run.id}>
+						<Link href={`/runs/${run.id}`}>
+							Run ID: {run.id} - Status: {run.status}
 						</Link>
 					</li>
 				))}

@@ -9,6 +9,9 @@ const NavBar: React.FC = () => (
       <li>
         <Link href="/bots">Bots</Link>
       </li>
+			<li>
+				<Link href="/agents">Agents</Link>
+			</li>
       <li>
         <Link href="/bots/new">Register Bot</Link>
       </li>

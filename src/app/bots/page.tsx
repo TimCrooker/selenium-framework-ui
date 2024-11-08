@@ -28,7 +28,7 @@ const BotsList: React.FC = () => {
         {bots.map((bot) => (
           <li key={bot.id}>
             <Link href={`/bots/${bot.id}`}>
-              {bot.name} - Status: {bot.status}
+              {bot.name} - {bot.script}
             </Link>
           </li>
         ))}
