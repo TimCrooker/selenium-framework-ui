@@ -3,6 +3,7 @@
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import apiClient from '@/utils/apiClient'
+import { Container, Typography, TextField, Button, Paper } from '@mui/material';
 
 const NewBot: React.FC = () => {
 	const router = useRouter()
@@ -21,35 +22,39 @@ const NewBot: React.FC = () => {
 	}
 
 	return (
-		<div>
-			<h1>Register New Bot</h1>
-			<form onSubmit={handleSubmit}>
-				<div>
-					<label>Bot Name:</label>
-					<input
+		<Container>
+			<Typography variant="h4" gutterBottom>Register New Bot</Typography>
+			<Paper elevation={3} style={{ padding: '1em' }}>
+				<form onSubmit={handleSubmit}>
+					<TextField
+						label="Bot Name"
 						value={name}
 						onChange={(e) => setName(e.target.value)}
 						required
+						fullWidth
+						margin="normal"
 					/>
-				</div>
-				<div>
-					<label>Script Path:</label>
-					<input
+					<TextField
+						label="Script Path"
 						value={script}
 						onChange={(e) => setScript(e.target.value)}
 						required
+						fullWidth
+						margin="normal"
 					/>
-				</div>
-				<div>
-					<label>Schedule (Cron Expression):</label>
-					<input
+					<TextField
+						label="Schedule (Cron Expression)"
 						value={schedule}
 						onChange={(e) => setSchedule(e.target.value)}
+						fullWidth
+						margin="normal"
 					/>
-				</div>
-				<button type="submit">Register Bot</button>
-			</form>
-		</div>
+					<Button type="submit" variant="contained" color="primary" style={{ marginTop: '1em' }}>
+						Register Bot
+					</Button>
+				</form>
+			</Paper>
+		</Container>
 	)
 }
 

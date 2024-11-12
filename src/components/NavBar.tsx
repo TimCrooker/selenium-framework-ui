@@ -2,21 +2,19 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { AppBar, Toolbar, Typography, Button } from '@mui/material';
 
 const NavBar: React.FC = () => (
-  <nav>
-    <ul>
-      <li>
-        <Link href="/bots">Bots</Link>
-      </li>
-			<li>
-				<Link href="/agents">Agents</Link>
-			</li>
-      <li>
-        <Link href="/bots/new">Register Bot</Link>
-      </li>
-    </ul>
-  </nav>
+  <AppBar position="static">
+    <Toolbar>
+      <Typography variant="h6" style={{ flexGrow: 1 }}>
+        Bot Monitoring App
+      </Typography>
+      <Button color="inherit" component={Link} href="/bots">Bots</Button>
+      <Button color="inherit" component={Link} href="/agents">Agents</Button>
+      <Button color="inherit" component={Link} href="/bots/new">Register Bot</Button>
+    </Toolbar>
+  </AppBar>
 );
 
 export default NavBar;

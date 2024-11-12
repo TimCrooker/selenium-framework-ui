@@ -5,6 +5,8 @@ import { useParams } from 'next/navigation'
 import { Agent } from '../../../types'
 import apiClient from '@/utils/apiClient'
 import socket from '@/utils/socket'
+import { Container, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material'
+import moment from 'moment-timezone'
 
 const AgentDetails: React.FC = () => {
 	const params = useParams()
@@ -52,23 +54,42 @@ const AgentDetails: React.FC = () => {
 		}
 	}, [agentId])
 
+	const formatHeartbeat = (heartbeat?: string) => {
+		return heartbeat ? moment.utc(heartbeat).tz(moment.tz.guess()).fromNow() : 'N/A'
+	}
+
 	if (!agent) return <div>Loading...</div>
 
 	return (
-		<div>
-			<h1>Agent Details: {agent.agent_id}</h1>
-			<p>Status: {agent.status}</p>
-			<p>Last Heartbeat: {agent.last_heartbeat || 'N/A'}</p>
-			<p>Public URL: {agent.public_url || 'N/A'}</p>
-			<p>Resources: {agent.resources ? JSON.stringify(agent.resources) : 'N/A'}</p>
+		<Container>
+			<Typography variant="h4" gutterBottom>Agent Details: {agent.agent_id}</Typography>
+			<Paper elevation={3} style={{ padding: '1em' }}>
+				<Typography variant="body1">Status: {agent.status}</Typography>
+				<Typography variant="body1">Last Heartbeat: {formatHeartbeat(agent.last_heartbeat)}</Typography>
+				<Typography variant="body1">Public URL: {agent.public_url || 'N/A'}</Typography>
+				<Typography variant="body1">Resources: {agent.resources ? JSON.stringify(agent.resources) : 'N/A'}</Typography>
+			</Paper>
 
-			<h2>Logs</h2>
-			<ul>
-				{logs.map((log, index) => (
-					<li key={index}>{log}</li>
-				))}
-			</ul>
-		</div>
+			<Typography variant="h5" gutterBottom style={{ marginTop: '1em' }}>Logs</Typography>
+			<Paper elevation={3} style={{ padding: '1em' }}>
+				<TableContainer>
+					<Table>
+						<TableHead>
+							<TableRow>
+								<TableCell>Log</TableCell>
+							</TableRow>
+						</TableHead>
+						<TableBody>
+							{logs.map((log, index) => (
+								<TableRow key={index}>
+									<TableCell>{log}</TableCell>
+								</TableRow>
+							))}
+						</TableBody>
+					</Table>
+				</TableContainer>
+			</Paper>
+		</Container>
 	)
 }
 
