@@ -97,8 +97,15 @@ const RunDetails: React.FC = () => {
 		// Subscribe to live logs
 		socket.emit('join', { run_id: runId })
 
+		// Listen for new events
+		socket.on('run_event', (data) => {
+			if (data.run_id === runId) {
+				setEvents((prevEvents) => [...prevEvents, data])
+			}
+		})
+
 		// Listen for new logs
-		socket.on('run_event_created', (data) => {
+		socket.on('run_log', (data) => {
 			if (data.run_id === runId) {
 				setLogs((prevLogs) => [...prevLogs, data])
 			}
@@ -113,7 +120,8 @@ const RunDetails: React.FC = () => {
 
 		return () => {
 			socket.emit('leave', { run_id: runId })
-			socket.off('run_event_created')
+			socket.off('run_event')
+			socket.off('run_log')
 			socket.off('run_updated')
 		}
 	}, [runId])
