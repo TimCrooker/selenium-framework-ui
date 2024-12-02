@@ -8,10 +8,9 @@ export interface Bot {
 export interface Run {
 	_id: string
 	bot_id: string
-	status: string
+	status: RunStatus
 	start_time?: string
 	end_time?: string
-	logs?: string
 }
 
 export interface RunLog {

@@ -21,9 +21,16 @@ import {
 	TableSortLabel,
 	TextField,
 	Grid,
+	TablePagination,
+	Box,
+	FormControl,
+	InputLabel,
+	MenuItem,
+	Select,
 } from '@mui/material'
 import moment from 'moment'
 import cronstrue from 'cronstrue'
+import { getStatusColor } from '@/utils/statusColor'
 
 const BotDetails: React.FC = () => {
 	const router = useRouter()
@@ -35,6 +42,10 @@ const BotDetails: React.FC = () => {
 	const [orderBy, setOrderBy] = useState<keyof Run>('start_time')
 	const [isEditing, setIsEditing] = useState(false)
 	const [updatedBot, setUpdatedBot] = useState<Partial<Bot>>({})
+	const [page, setPage] = useState(0)
+	const [rowsPerPage, setRowsPerPage] = useState(10)
+	const [searchTerm, setSearchTerm] = useState('')
+	const [statusFilter, setStatusFilter] = useState<string | null>(null)
 
 	const handleRequestSort = (property: keyof Run) => {
 		const isAsc = orderBy === property && order === 'asc'
@@ -56,22 +67,11 @@ const BotDetails: React.FC = () => {
 		)
 	})
 
-	const getStatusColor = (status: string) => {
-		switch (status) {
-			case 'completed':
-				return 'green'
-			case 'error':
-				return 'red'
-			case 'running':
-				return 'blue'
-			case 'starting':
-				return 'orange'
-			case 'queued':
-				return 'purple'
-			default:
-				return 'grey'
-		}
-	}
+	const filteredRuns = sortedRuns.filter((run) => {
+		const matchesSearch = run._id.includes(searchTerm) || run.status.includes(searchTerm)
+		const matchesStatus = statusFilter ? run.status === statusFilter : true
+		return matchesSearch && matchesStatus
+	})
 
 	const computeDuration = (start_time?: string, end_time?: string) => {
 		if (!start_time || !end_time) return 'N/A'
@@ -189,6 +189,25 @@ const BotDetails: React.FC = () => {
 		setUpdatedBot({})
 	}
 
+	const handleChangePage = (event: unknown, newPage: number) => {
+		setPage(newPage)
+	}
+
+	const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+		setRowsPerPage(parseInt(event.target.value, 10))
+		setPage(0)
+	}
+
+	const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+		setSearchTerm(event.target.value)
+		setPage(0)
+	}
+
+	const handleStatusFilterChange = (event: React.ChangeEvent<{ value: unknown }>) => {
+		setStatusFilter(event.target.value as string)
+		setPage(0)
+	}
+
 	if (!bot) return <div>Loading...</div>
 
 	return (
@@ -196,7 +215,7 @@ const BotDetails: React.FC = () => {
 			<Typography variant="h4" gutterBottom>
 				Bot Details: {bot.name}
 			</Typography>
-			<Paper elevation={3} style={{ padding: '1em' }}>
+			<Paper elevation={3} style={{ padding: '2em', marginBottom: '2em' }}>
 				{isEditing ? (
 					<Grid container spacing={2}>
 						<Grid item xs={12}>
@@ -216,7 +235,9 @@ const BotDetails: React.FC = () => {
 								value={updatedBot.script || ''}
 								onChange={(e) =>
 									setUpdatedBot({ ...updatedBot, script: e.target.value })
-								}
+									}
+								multiline
+								rows={4}
 							/>
 						</Grid>
 						<Grid item xs={12}>
@@ -231,68 +252,90 @@ const BotDetails: React.FC = () => {
 						</Grid>
 					</Grid>
 				) : (
-					<>
-						<Typography variant="body1">Name: {bot.name}</Typography>
-						<Typography variant="body1">Script: {bot.script}</Typography>
-						<Typography variant="body1">
-							Schedule:{' '}
+					<Box>
+						<Typography variant="body1" gutterBottom>
+							<strong>Name:</strong> {bot.name}
+						</Typography>
+						<Typography variant="body1" gutterBottom>
+							<strong>Script:</strong> {bot.script}
+						</Typography>
+						<Typography variant="body1" gutterBottom>
+							<strong>Schedule:</strong>{' '}
 							{bot.schedule
 								? cronstrue.toString(bot.schedule)
 								: 'Not scheduled'}
 						</Typography>
-					</>
+					</Box>
 				)}
 			</Paper>
 
-			{isEditing ? (
-				<>
-					<Button
-						variant="contained"
-						color="primary"
-						onClick={handleSaveBot}
-						style={{ marginTop: '1em' }}
-					>
-						Save
-					</Button>
-					<Button
-						variant="contained"
-						onClick={handleCancelEdit}
-						style={{ marginLeft: '10px', marginTop: '1em' }}
-					>
-						Cancel
-					</Button>
-				</>
-			) : (
-				<>
-					<Button
-						variant="contained"
-						color="primary"
-						onClick={handleRunBot}
-						style={{ marginTop: '1em' }}
-					>
-						Run Bot
-					</Button>
-					<Button
-						variant="contained"
-						color="secondary"
-						onClick={handleDeleteBot}
-						style={{ marginLeft: '10px', marginTop: '1em' }}
-					>
-						Delete Bot
-					</Button>
-					<Button
-						variant="contained"
-						onClick={handleEditBot}
-						style={{ marginLeft: '10px', marginTop: '1em' }}
-					>
-						Edit Bot
-					</Button>
-				</>
-			)}
+			<Box display="flex" justifyContent="flex-end" mb={2}>
+				{isEditing ? (
+					<>
+						<Button
+							variant="contained"
+							color="primary"
+							onClick={handleSaveBot}
+							style={{ marginRight: '10px' }}
+						>
+							Save
+						</Button>
+						<Button variant="contained" onClick={handleCancelEdit}>
+							Cancel
+						</Button>
+					</>
+				) : (
+					<>
+						<Button
+							variant="contained"
+							color="primary"
+							onClick={handleRunBot}
+							style={{ marginRight: '10px' }}
+						>
+							Run Bot
+						</Button>
+						<Button
+							variant="contained"
+							color="secondary"
+							onClick={handleDeleteBot}
+							style={{ marginRight: '10px' }}
+						>
+							Delete Bot
+						</Button>
+						<Button variant="contained" onClick={handleEditBot}>
+							Edit Bot
+						</Button>
+					</>
+				)}
+			</Box>
 
-			<Typography variant="h5" gutterBottom style={{ marginTop: '1em' }}>
+			<Typography variant="h5" gutterBottom>
 				Runs
 			</Typography>
+			<Box display="flex" justifyContent="space-between" mb={2}>
+				<TextField
+					label="Search"
+					variant="outlined"
+					value={searchTerm}
+					onChange={handleSearchChange}
+					style={{ flex: 1, marginRight: '1em' }}
+				/>
+				<FormControl variant="outlined" style={{ minWidth: 200 }}>
+					<InputLabel>Status Filter</InputLabel>
+					<Select
+						value={statusFilter || ''}
+						onChange={handleStatusFilterChange as any}
+						label="Status Filter"
+					>
+						<MenuItem value="">All</MenuItem>
+						<MenuItem value="completed">Completed</MenuItem>
+						<MenuItem value="error">Error</MenuItem>
+						<MenuItem value="running">Running</MenuItem>
+						<MenuItem value="starting">Starting</MenuItem>
+						<MenuItem value="queued">Queued</MenuItem>
+					</Select>
+				</FormControl>
+			</Box>
 			<Paper elevation={3} style={{ padding: '1em' }}>
 				<TableContainer>
 					<Table>
@@ -339,41 +382,56 @@ const BotDetails: React.FC = () => {
 							</TableRow>
 						</TableHead>
 						<TableBody>
-							{sortedRuns.map((run) => (
-								<TableRow key={run._id}>
-									<TableCell>
-										<Link href={`/runs/${run._id}`} passHref>
-											{run._id}
-										</Link>
-									</TableCell>
-									<TableCell style={{ color: getStatusColor(run.status) }}>
-										{run.status}
-									</TableCell>
-									<TableCell>
-										{run.start_time
-											? moment(run.start_time).format('MMMM Do YYYY, h:mm:ss a')
-											: 'N/A'}
-									</TableCell>
-									<TableCell>
-										{run.end_time
-											? moment(run.end_time).format('MMMM Do YYYY, h:mm:ss a')
-											: 'N/A'}
-									</TableCell>
-									<TableCell>
-										{computeDuration(run.start_time, run.end_time)}
-									</TableCell>
-									<TableCell>
-										<Link href={`/runs/${run._id}/logs`} passHref>
-											<Button variant="contained" color="primary">
-												View Logs
-											</Button>
-										</Link>
-									</TableCell>
-								</TableRow>
-							))}
+							{filteredRuns
+								.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+								.map((run) => (
+									<TableRow key={run._id}>
+										<TableCell>
+											<Link href={`/runs/${run._id}`} passHref>
+												{run._id}
+											</Link>
+										</TableCell>
+										<TableCell style={{ color: getStatusColor(run.status) }}>
+											{run.status}
+										</TableCell>
+										<TableCell>
+											{run.start_time
+												? moment(run.start_time).format(
+														'MMMM Do YYYY, h:mm:ss a'
+												  )
+												: 'N/A'}
+										</TableCell>
+										<TableCell>
+											{run.end_time
+												? moment(run.end_time).format(
+														'MMMM Do YYYY, h:mm:ss a'
+												  )
+												: 'N/A'}
+										</TableCell>
+										<TableCell>
+											{computeDuration(run.start_time, run.end_time)}
+										</TableCell>
+										<TableCell>
+											<Link href={`/runs/${run._id}/logs`} passHref>
+												<Button variant="contained" color="primary">
+													View Logs
+												</Button>
+											</Link>
+										</TableCell>
+									</TableRow>
+								))}
 						</TableBody>
 					</Table>
 				</TableContainer>
+				<TablePagination
+					rowsPerPageOptions={[5, 10, 25]}
+					component="div"
+					count={filteredRuns.length}
+					rowsPerPage={rowsPerPage}
+					page={page}
+					onPageChange={handleChangePage}
+					onRowsPerPageChange={handleChangeRowsPerPage}
+				/>
 			</Paper>
 		</Container>
 	)
