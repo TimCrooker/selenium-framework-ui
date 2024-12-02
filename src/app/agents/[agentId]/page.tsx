@@ -5,8 +5,9 @@ import { useParams } from 'next/navigation'
 import { Agent } from '../../../types'
 import apiClient from '@/utils/apiClient'
 import socket from '@/utils/socket'
-import { Container, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material'
+import { Container, Typography, Paper } from '@mui/material'
 import moment from 'moment-timezone'
+import LogViewer from '@/components/LogViewer'
 
 const AgentDetails: React.FC = () => {
 	const params = useParams()
@@ -71,24 +72,7 @@ const AgentDetails: React.FC = () => {
 			</Paper>
 
 			<Typography variant="h5" gutterBottom style={{ marginTop: '1em' }}>Logs</Typography>
-			<Paper elevation={3} style={{ padding: '1em' }}>
-				<TableContainer>
-					<Table>
-						<TableHead>
-							<TableRow>
-								<TableCell>Log</TableCell>
-							</TableRow>
-						</TableHead>
-						<TableBody>
-							{logs.map((log, index) => (
-								<TableRow key={index}>
-									<TableCell>{log}</TableCell>
-								</TableRow>
-							))}
-						</TableBody>
-					</Table>
-				</TableContainer>
-			</Paper>
+				<LogViewer logs={logs} />
 		</Container>
 	)
 }

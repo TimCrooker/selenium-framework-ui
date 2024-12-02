@@ -13,8 +13,8 @@ const AgentsList: React.FC = () => {
 	useEffect(() => {
 		const fetchAgents = async () => {
 			try {
-				const response = await apiClient.get<{ agents: Agent[] }>('/agents')
-				setAgents(response.data?.agents)
+				const response = await apiClient.get<Agent[]>('/agents')
+				setAgents(response.data)
 			} catch (error) {
 				console.error('Error fetching agents:', error)
 			}

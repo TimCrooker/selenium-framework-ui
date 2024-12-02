@@ -24,11 +24,11 @@ const BotsList: React.FC = () => {
     fetchBots();
 
     socket.on('bot_deleted', (data) => {
-      setBots((prevBots) => prevBots.filter(bot => bot.id !== data.bot_id));
+      setBots((prevBots) => prevBots.filter(bot => bot._id !== data.bot_id));
     });
 
     socket.on('bot_updated', (updatedBot) => {
-      setBots((prevBots) => prevBots.map(bot => bot.id === updatedBot.id ? updatedBot : bot));
+      setBots((prevBots) => prevBots.map(bot => bot._id === updatedBot.id ? updatedBot : bot));
     });
 
     return () => {
@@ -40,7 +40,7 @@ const BotsList: React.FC = () => {
   const handleDelete = async (id: string) => {
     try {
       await apiClient.delete(`/bots/${id}`);
-      setBots(bots.filter(bot => bot.id !== id));
+      setBots(bots.filter(bot => bot._id !== id));
     } catch (error) {
       console.error('Error deleting bot:', error);
     }
@@ -70,16 +70,16 @@ const BotsList: React.FC = () => {
           </TableHead>
           <TableBody>
             {bots.map((bot) => (
-              <TableRow key={bot.id}>
+              <TableRow key={bot._id}>
                 <TableCell>
-                  <Link href={`/bots/${bot.id}`} passHref>
+                  <Link href={`/bots/${bot._id}`} passHref>
                     <Typography variant="body1" color="primary">{bot.name}</Typography>
                   </Link>
                 </TableCell>
                 <TableCell>{bot.script}</TableCell>
                 <TableCell>{formatSchedule(bot.schedule)}</TableCell>
                 <TableCell>
-                  <Button variant="contained" color="secondary" onClick={() => handleDelete(bot.id)}>Delete</Button>
+                  <Button variant="contained" color="secondary" onClick={() => handleDelete(bot._id)}>Delete</Button>
                 </TableCell>
               </TableRow>
             ))}

@@ -1,12 +1,12 @@
 export interface Bot {
-	id: string
+	_id: string
 	name: string
 	script: string
 	schedule?: string
 }
 
 export interface Run {
-	id: string
+	_id: string
 	bot_id: string
 	status: string
 	start_time?: string
@@ -15,11 +15,21 @@ export interface Run {
 }
 
 export interface RunLog {
+	_id: string
 	run_id: string
-	timestamp: string
 	message: string
-	screenshot?: string
+	timestamp: string
 	payload?: Record<string, any>
+}
+
+export interface RunEvent {
+	_id: string
+	run_id: string
+	event_type: string
+	message: string
+	timestamp: string
+	payload?: Record<string, any>
+	screenshot?: string
 }
 
 export interface Agent {
