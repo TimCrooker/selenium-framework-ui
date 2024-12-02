@@ -6,6 +6,7 @@ import Link from 'next/link'
 import apiClient from '@/utils/apiClient'
 import { Container, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button } from '@mui/material'
 import moment from 'moment-timezone'
+import socket from '@/utils/socket'
 
 const AgentsList: React.FC = () => {
 	const [agents, setAgents] = useState<Agent[]>([])
@@ -21,6 +22,19 @@ const AgentsList: React.FC = () => {
 		}
 
 		fetchAgents()
+
+		// Subscribe to agent updates
+		socket.emit('join', { room: 'agents' })
+
+		// Listen for agent updates
+		socket.on('agent_updated', (updatedAgent) => {
+			setAgents((prevAgents) => prevAgents.map(agent => agent.agent_id === updatedAgent.agent_id ? updatedAgent : agent))
+		})
+
+		return () => {
+			socket.emit('leave', { room: 'agents' })
+			socket.off('agent_updated')
+		}
 	}, [])
 
 	const formatHeartbeat = (heartbeat?: string) => {

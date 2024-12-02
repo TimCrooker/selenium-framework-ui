@@ -335,6 +335,7 @@ const BotDetails: React.FC = () => {
 									</TableSortLabel>
 								</TableCell>
 								<TableCell>Duration</TableCell>
+								<TableCell>Logs</TableCell>
 							</TableRow>
 						</TableHead>
 						<TableBody>
@@ -360,6 +361,13 @@ const BotDetails: React.FC = () => {
 									</TableCell>
 									<TableCell>
 										{computeDuration(run.start_time, run.end_time)}
+									</TableCell>
+									<TableCell>
+										<Link href={`/runs/${run._id}/logs`} passHref>
+											<Button variant="contained" color="primary">
+												View Logs
+											</Button>
+										</Link>
 									</TableCell>
 								</TableRow>
 							))}

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, FormControlLabel, Checkbox } from '@mui/material';
 
@@ -8,7 +7,7 @@ interface LogViewerProps {
 
 const LogViewer: React.FC<LogViewerProps> = ({ logs }) => {
 	const [autoScroll, setAutoScroll] = useState(true);
-	const logsEndRef = useRef<HTMLDivElement | null>(null);
+	const logsEndRef = useRef<HTMLTableRowElement | null>(null);
 
 	useEffect(() => {
 		if (autoScroll && logsEndRef.current) {
@@ -35,7 +34,7 @@ const LogViewer: React.FC<LogViewerProps> = ({ logs }) => {
 								<TableCell>{log}</TableCell>
 							</TableRow>
 						))}
-						<div ref={logsEndRef} />
+						<TableRow ref={logsEndRef} />
 					</TableBody>
 				</Table>
 			</TableContainer>

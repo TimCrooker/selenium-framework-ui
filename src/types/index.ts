@@ -17,6 +17,7 @@ export interface Run {
 export interface RunLog {
 	_id: string
 	run_id: string
+	level: LogLevel
 	message: string
 	timestamp: string
 	payload?: Record<string, any>
@@ -38,4 +39,22 @@ export interface Agent {
 	last_heartbeat?: string
 	resources?: Record<string, any>
 	public_url?: string
+}
+
+export enum RunStatus {
+	QUEUED = "queued",
+	SCHEDULED = "scheduled",
+	STARTING = "starting",
+	RUNNING = "running",
+	COMPLETED = "completed",
+	ERROR = "error",
+	CANCELLED = "cancelled"
+}
+
+export enum LogLevel {
+	DEBUG = "DEBUG",
+	INFO = "INFO",
+	WARNING = "WARNING",
+	ERROR = "ERROR",
+	CRITICAL = "CRITICAL"
 }

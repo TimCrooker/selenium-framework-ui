@@ -2,18 +2,21 @@
 
 import React, { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
-import { Agent } from '../../../types'
+import { Agent, Run } from '../../../types'
 import apiClient from '@/utils/apiClient'
 import socket from '@/utils/socket'
-import { Container, Typography, Paper } from '@mui/material'
+import { Container, Typography, Paper, Grid, List, ListItem, ListItemText, Divider } from '@mui/material'
 import moment from 'moment-timezone'
 import LogViewer from '@/components/LogViewer'
+import Link from 'next/link'
 
 const AgentDetails: React.FC = () => {
 	const params = useParams()
 	const agentId = params.agentId
 	const [agent, setAgent] = useState<Agent | null>(null)
 	const [logs, setLogs] = useState<string[]>([])
+	const [runningRuns, setRunningRuns] = useState<Run[]>([])
+	const [pastRuns, setPastRuns] = useState<Run[]>([])
 
 	useEffect(() => {
 		if (!agentId) return
@@ -28,6 +31,20 @@ const AgentDetails: React.FC = () => {
 		}
 
 		fetchAgentDetails()
+
+		const fetchAgentRuns = async () => {
+			try {
+				const runsResponse = await apiClient.get<Run[]>(`/agents/${agentId}/runs`)
+				const currentRuns = runsResponse.data.filter(run => run.status === 'running')
+				const historicalRuns = runsResponse.data.filter(run => run.status !== 'running')
+				setRunningRuns(currentRuns)
+				setPastRuns(historicalRuns)
+			} catch (error) {
+				console.error('Error fetching agent runs:', error)
+			}
+		}
+
+		fetchAgentRuns()
 
 		// Subscribe to agent status updates
 		socket.emit('join', { agent_id: agentId })
@@ -48,10 +65,18 @@ const AgentDetails: React.FC = () => {
 			}
 		})
 
+		socket.on('run_updated', (data) => {
+			if (data.agent_id === agentId) {
+				setRunningRuns((prevRuns) => prevRuns.filter(run => run._id !== data._id))
+				setPastRuns((prevRuns) => [data, ...prevRuns])
+			}
+		})
+
 		return () => {
 			socket.emit('leave', { agent_id: agentId })
 			socket.off('agent_updated')
 			socket.off('agent_log_created')
+			socket.off('run_updated')
 		}
 	}, [agentId])
 
@@ -72,7 +97,41 @@ const AgentDetails: React.FC = () => {
 			</Paper>
 
 			<Typography variant="h5" gutterBottom style={{ marginTop: '1em' }}>Logs</Typography>
-				<LogViewer logs={logs} />
+			<LogViewer logs={logs} />
+
+			<Grid container spacing={2} style={{ marginTop: '1em' }}>
+				<Grid item xs={8}>
+					<Typography variant="h5" gutterBottom>Currently Running Runs</Typography>
+					<Paper elevation={3} style={{ padding: '1em' }}>
+						<List>
+							{runningRuns.map(run => (
+								<Link href={`/runs/${run._id}`} passHref key={run._id}>
+									<ListItem component="a">
+										<ListItemText primary={`Run ID: ${run._id}`} secondary={`Status: ${run.status}`} />
+									</ListItem>
+								</Link>
+							))}
+						</List>
+					</Paper>
+				</Grid>
+				<Grid item xs={4}>
+					<Typography variant="h5" gutterBottom>Past Runs</Typography>
+					<Paper elevation={3} style={{ padding: '1em', maxHeight: '400px', overflow: 'auto' }}>
+						<List>
+							{pastRuns.map(run => (
+								<React.Fragment key={run._id}>
+									<Link href={`/runs/${run._id}`} passHref>
+										<ListItem component="a">
+											<ListItemText primary={`Run ID: ${run._id}`} secondary={`Status: ${run.status}`} />
+										</ListItem>
+									</Link>
+									<Divider />
+								</React.Fragment>
+							))}
+						</List>
+					</Paper>
+				</Grid>
+			</Grid>
 		</Container>
 	)
 }
